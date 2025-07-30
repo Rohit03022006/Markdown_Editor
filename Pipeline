@@ -1,0 +1,55 @@
+pipeline {
+    agent any 
+    
+    stages {
+        stage('Code') {
+            steps {
+                echo 'Cloning GitHub repo…'
+                git branch: 'main',
+                    url: 'https://github.com/Rohit03022006/Markdown_Editor.git'
+            }
+        }
+        
+        stage('Build and Test') {
+            steps {
+                echo 'Building Docker image...'
+                sh 'docker build -t rohitxten/markdown_editor:latest .'
+            }
+        }
+        
+        stage('Push') {
+            steps {
+                echo 'Pushing the Docker image to DockerHub'
+                withCredentials([usernamePassword(
+                    credentialsId: 'Dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push rohitxten/markdown_editor:latest
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application...'
+                sh '''
+                    docker compose down || true 
+                    docker compose up -d
+                '''
+            }
+        }
+    }         
+
+    post {
+        failure {
+            echo 'Pipeline failed! Check logs for errors.'
+        }
+        success {
+            echo 'Pipeline succeeded! Image pushed and app deployed.'
+        }
+    }
+}
