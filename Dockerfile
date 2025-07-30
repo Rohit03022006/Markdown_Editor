@@ -8,12 +8,13 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build
+RUN npm run dev
 
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 8000
+
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

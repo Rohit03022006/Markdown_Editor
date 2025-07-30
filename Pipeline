@@ -26,7 +26,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         docker push rohitxten/markdown_editor:latest
                     '''
                 }
@@ -37,16 +37,23 @@ pipeline {
             steps {
                 echo 'Deploying application...'
                 sh '''
-                    docker compose down || true 
-                    docker compose up -d
+                    docker-compose down || true 
+                    docker-compose up -d
                 '''
             }
         }
     }         
 
     post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleanWs()
+        }
         failure {
             echo 'Pipeline failed! Check logs for errors.'
+            mail to: 'team@example.com',
+                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                 body: "Check ${env.BUILD_URL}"
         }
         success {
             echo 'Pipeline succeeded! Image pushed and app deployed.'
