@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { marked } from "marked";
-import { FaEdit, FaEye, FaExchangeAlt } from "react-icons/fa";
+import { FaEdit, FaEye, FaCopy, FaCheck, FaFileExport } from "react-icons/fa";
 import "./MarkdownPreviewer.css";
 import Footer from "./Footer";
 import Header from "./Header";
 
 const MarkdownPreviewer = () => {
-  const defaultMarkdown = `# Markdown Full Example
+    const defaultMarkdown = `# Markdown Full Example
 
 ## 1. Headers
 
@@ -123,6 +123,8 @@ Markdown supports emojis via Unicode:
 
   const [markdown, setMarkdown] = useState(defaultMarkdown);
   const [showPreview, setShowPreview] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [exported, setExported] = useState(false);
 
   useEffect(() => {
     marked.setOptions({
@@ -139,27 +141,95 @@ Markdown supports emojis via Unicode:
     setShowPreview(!showPreview);
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(markdown)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+  };
+
+  const exportAsHTML = () => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Exported Markdown</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+          }
+          pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+          }
+          code {
+            background: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+          }
+          blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 15px;
+            color: #666;
+          }
+          table {
+            border-collapse: collapse;
+            width: 100%;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+          }
+          th {
+            background-color: #f4f4f4;
+          }
+        </style>
+      </head>
+      <body>
+        ${marked(markdown)}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'markdown-export.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setExported(true);
+    setTimeout(() => setExported(false), 2000);
+  };
+
   return (
     <div className="app-container">
       <Header />
       <div className="panels-wrapper">
-        
         <div className="editor-container">
           <div className="panel-header editor-header">
             <h2 className="panel-title">
               <FaEdit className="panel-icon" />
               Editor
             </h2>
-          </div>
-          <textarea
-            id="editor"
-            value={markdown}
-            onChange={handleChange}
-            placeholder="Type your markdown here..."
-          />
-        </div>
-        <div className="toggle-button">
-          <button
+            <button 
+            className="button"
             onClick={togglePreview}
             aria-label={showPreview ? "Show editor" : "Show preview"}
           >
@@ -173,6 +243,16 @@ Markdown supports emojis via Unicode:
               </>
             )}
           </button>
+          </div>
+          <textarea
+            id="editor"
+            value={markdown}
+            onChange={handleChange}
+            placeholder="Type your markdown here..."
+          />
+        </div>
+        <div className="toggle-button">
+          
         </div>
         {showPreview && (
           <div className="preview-container">
@@ -181,6 +261,38 @@ Markdown supports emojis via Unicode:
                 <FaEye className="panel-icon" />
                 Preview
               </h2>
+              <div className="preview-actions">
+                <button 
+                  onClick={copyToClipboard} 
+                  className="action-button copy-button"
+                  aria-label="Copy markdown"
+                >
+                  {copied ? (
+                    <>
+                      <FaCheck className="button-icon" /> Copied!
+                    </>
+                  ) : (
+                    <>
+                      <FaCopy className="button-icon" /> Copy
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={exportAsHTML} 
+                  className="action-button export-button"
+                  aria-label="Export as HTML"
+                >
+                  {exported ? (
+                    <>
+                      <FaCheck className="button-icon" /> Exported!
+                    </>
+                  ) : (
+                    <>
+                      <FaFileExport className="button-icon" /> Export HTML
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             <div
               id="preview"
