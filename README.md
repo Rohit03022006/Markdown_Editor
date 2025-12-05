@@ -5,7 +5,6 @@
    https://markdown-editor-077h.onrender.com/
 
 ![Desktop Preview](./Markdown_Editor.png)
-![Mobile Preview](./Markdown_Editor_Phone.png)
 
 A feature-rich Markdown editor with live preview, built with React and Vite. Perfect for developers, technical writers, and content creators who need instant feedback while writing Markdown.
 
